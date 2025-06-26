@@ -23,7 +23,7 @@ class Player(PlayerBase):
     completed_at: Optional[datetime]
     
     class Config:
-        from_attributes = True
+        orm_mode = True
 
 
 class QuestionBase(BaseModel):
@@ -44,7 +44,7 @@ class Question(QuestionBase):
     id: int
     
     class Config:
-        from_attributes = True
+        orm_mode = True
 
 
 class GameBase(BaseModel):
@@ -64,7 +64,7 @@ class Game(GameBase):
     status: GameStatus
     
     class Config:
-        from_attributes = True
+        orm_mode = True
 
 
 class TelegramUpdate(BaseModel):
