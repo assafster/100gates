@@ -1,0 +1,32 @@
+services:
+  - type: web
+    name: 100gates-bot
+    env: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: TELEGRAM_BOT_TOKEN
+        sync: false
+      - key: DATABASE_URL
+        fromDatabase:
+          name: 100gates-db
+          property: connectionString
+      - key: WEBHOOK_URL
+        value: https://100gates-bot.onrender.com
+      - key: SECRET_KEY
+        generateValue: true
+      - key: QUESTION_TIMEOUT
+        value: 30
+      - key: TOTAL_GATES
+        value: 100
+      - key: PRIZE_POOL_PERCENTAGE
+        value: 69
+      - key: ADMIN_TELEGRAM_IDS
+        sync: false
+
+databases:
+  - name: 100gates-db
+    databaseName: 100gates
+    user: 100gates_user
+    plan: free 
