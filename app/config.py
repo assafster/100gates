@@ -17,9 +17,6 @@ class Settings(BaseSettings):
     # Security
     secret_key: str
     
-    # Monitoring
-    sentry_dsn: str = ""
-    
     # Game Configuration
     question_timeout: int = 30
     total_gates: int = 100

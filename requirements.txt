@@ -8,5 +8,4 @@ alembic==1.8.1
 pydantic==1.9.1
 redis==4.3.4
 celery==5.2.3
-sentry-sdk[fastapi]==1.9.10
 python-multipart==0.0.5 
