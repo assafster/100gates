@@ -1,5 +1,5 @@
 import os
-from typing import List
+from typing import List, Optional
 from pydantic import BaseSettings
 
 
@@ -11,8 +11,8 @@ class Settings(BaseSettings):
     # Database Configuration
     database_url: str
     
-    # Redis Configuration
-    redis_url: str = "redis://localhost:6379"
+    # Redis Configuration (optional)
+    redis_url: Optional[str] = None
     
     # Security
     secret_key: str
@@ -36,6 +36,10 @@ class Settings(BaseSettings):
                 int(x.strip()) for x in self.admin_telegram_ids.split(",") 
                 if x.strip().isdigit()
             ]
+        
+        # Handle Railway's DATABASE_URL format
+        if self.database_url and self.database_url.startswith('postgres://'):
+            self.database_url = self.database_url.replace('postgres://', 'postgresql://', 1)
 
 
 # Global settings instance

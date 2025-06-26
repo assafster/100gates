@@ -5,15 +5,13 @@ from telegram import Update
 from telegram.ext import Application
 import logging
 import json
+import time
 
 from app.database import get_db, engine
 from app.models import Base
 from app.telegram_bot import bot
 from app.crud import get_game_stats, get_active_players, get_leaderboard
 from app.config import settings
-
-# Create database tables
-Base.metadata.create_all(bind=engine)
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -30,11 +28,27 @@ app = FastAPI(
 async def startup_event():
     """Initialize bot webhook on startup"""
     try:
+        # Wait for database to be ready
+        max_retries = 5
+        for attempt in range(max_retries):
+            try:
+                # Create database tables
+                Base.metadata.create_all(bind=engine)
+                logger.info("Database tables created successfully")
+                break
+            except Exception as e:
+                if attempt < max_retries - 1:
+                    logger.warning(f"Database connection attempt {attempt + 1} failed: {e}")
+                    time.sleep(2)
+                else:
+                    logger.error(f"Failed to connect to database after {max_retries} attempts: {e}")
+                    raise
+        
         # Set webhook
         await bot.application.bot.set_webhook(url=f"{settings.webhook_url}/webhook")
         logger.info("Webhook set successfully")
     except Exception as e:
-        logger.error(f"Failed to set webhook: {e}")
+        logger.error(f"Failed to initialize application: {e}")
 
 
 @app.on_event("shutdown")
