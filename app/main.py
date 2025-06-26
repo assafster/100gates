@@ -28,29 +28,39 @@ app = FastAPI(
 async def startup_event():
     """Initialize bot webhook on startup"""
     try:
-        # Wait for database to be ready
-        max_retries = 5
-        for attempt in range(max_retries):
-            try:
-                # Create database tables
-                Base.metadata.create_all(bind=engine)
-                logger.info("Database tables created successfully")
-                break
-            except Exception as e:
-                if attempt < max_retries - 1:
-                    logger.warning(f"Database connection attempt {attempt + 1} failed: {e}")
-                    time.sleep(2)
-                else:
-                    logger.error(f"Failed to connect to database after {max_retries} attempts: {e}")
-                    raise
+        logger.info("Starting application...")
         
-        # Initialize bot and set webhook
-        bot = get_bot()
-        if bot.application:
-            await bot.application.bot.set_webhook(url=f"{settings.webhook_url}/webhook")
-            logger.info("Webhook set successfully")
-        else:
-            logger.warning("Bot not initialized - webhook not set")
+        # Try to initialize database (but don't fail if it's not available)
+        try:
+            # Wait for database to be ready
+            max_retries = 3
+            for attempt in range(max_retries):
+                try:
+                    # Create database tables
+                    Base.metadata.create_all(bind=engine)
+                    logger.info("Database tables created successfully")
+                    break
+                except Exception as e:
+                    if attempt < max_retries - 1:
+                        logger.warning(f"Database connection attempt {attempt + 1} failed: {e}")
+                        time.sleep(2)
+                    else:
+                        logger.warning(f"Database not available after {max_retries} attempts: {e}")
+        except Exception as e:
+            logger.warning(f"Database initialization failed: {e}")
+        
+        # Initialize bot and set webhook (but don't fail if token is missing)
+        try:
+            bot = get_bot()
+            if bot.application:
+                await bot.application.bot.set_webhook(url=f"{settings.webhook_url}/webhook")
+                logger.info("Webhook set successfully")
+            else:
+                logger.warning("Bot not initialized - webhook not set")
+        except Exception as e:
+            logger.warning(f"Bot initialization failed: {e}")
+        
+        logger.info("Application startup completed")
     except Exception as e:
         logger.error(f"Failed to initialize application: {e}")
 
@@ -101,14 +111,21 @@ async def webhook(request: Request):
 @app.get("/health")
 async def health_check():
     """Detailed health check"""
-    bot = get_bot()
-    return {
-        "status": "healthy",
-        "bot_token_configured": bool(settings.telegram_bot_token),
-        "bot_initialized": bool(bot.application),
-        "database_configured": bool(settings.database_url),
-        "webhook_url": settings.webhook_url
-    }
+    try:
+        bot = get_bot()
+        return {
+            "status": "healthy",
+            "bot_token_configured": bool(settings.telegram_bot_token),
+            "bot_initialized": bool(bot.application),
+            "database_configured": bool(settings.database_url),
+            "webhook_url": settings.webhook_url
+        }
+    except Exception as e:
+        logger.error(f"Health check failed: {e}")
+        return {
+            "status": "unhealthy",
+            "error": str(e)
+        }
 
 
 # Admin endpoints

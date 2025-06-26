@@ -8,7 +8,7 @@ from app.crud import (
     start_new_game, get_player, check_answer, get_question, 
     eliminate_player, get_leaderboard, get_game_stats
 )
-from app.models import GameState, EliminationReason
+from app.models import GameState, EliminationReason, Game, GameStatus
 from app.config import settings
 import asyncio
 from datetime import datetime, timedelta
