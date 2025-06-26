@@ -20,8 +20,11 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy application code
 COPY . .
 
-# Expose port
+# Make start script executable
+RUN chmod +x start.py
+
+# Expose port (Railway will override this)
 EXPOSE 8000
 
-# Run the simple test application with explicit port handling
-CMD ["sh", "-c", "echo 'Starting app on port ${PORT:-8000}' && uvicorn test_app:app --host 0.0.0.0 --port ${PORT:-8000} --log-level info"] 
+# Run the start script
+CMD ["python", "start.py"] 
