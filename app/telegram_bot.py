@@ -23,11 +23,19 @@ logger = logging.getLogger(__name__)
 
 class TelegramBot:
     def __init__(self):
-        self.application = Application.builder().token(settings.telegram_bot_token).build()
-        self.setup_handlers()
+        try:
+            self.application = Application.builder().token(settings.telegram_bot_token).build()
+            self.setup_handlers()
+            logger.info("Telegram bot initialized successfully")
+        except Exception as e:
+            logger.error(f"Failed to initialize Telegram bot: {e}")
+            self.application = None
     
     def setup_handlers(self):
         """Setup all command and callback handlers"""
+        if not self.application:
+            return
+            
         self.application.add_handler(CommandHandler("start", self.start_command))
         self.application.add_handler(CommandHandler("restart", self.restart_command))
         self.application.add_handler(CommandHandler("help", self.help_command))
@@ -305,5 +313,12 @@ class TelegramBot:
         self.application.run_polling()
 
 
-# Global bot instance
-bot = TelegramBot() 
+# Global bot instance - initialize lazily
+bot = None
+
+def get_bot():
+    """Get or create bot instance"""
+    global bot
+    if bot is None:
+        bot = TelegramBot()
+    return bot 

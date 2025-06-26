@@ -9,7 +9,7 @@ import time
 
 from app.database import get_db, engine
 from app.models import Base
-from app.telegram_bot import bot
+from app.telegram_bot import get_bot
 from app.crud import get_game_stats, get_active_players, get_leaderboard
 from app.config import settings
 
@@ -44,9 +44,13 @@ async def startup_event():
                     logger.error(f"Failed to connect to database after {max_retries} attempts: {e}")
                     raise
         
-        # Set webhook
-        await bot.application.bot.set_webhook(url=f"{settings.webhook_url}/webhook")
-        logger.info("Webhook set successfully")
+        # Initialize bot and set webhook
+        bot = get_bot()
+        if bot.application:
+            await bot.application.bot.set_webhook(url=f"{settings.webhook_url}/webhook")
+            logger.info("Webhook set successfully")
+        else:
+            logger.warning("Bot not initialized - webhook not set")
     except Exception as e:
         logger.error(f"Failed to initialize application: {e}")
 
@@ -55,8 +59,10 @@ async def startup_event():
 async def shutdown_event():
     """Remove webhook on shutdown"""
     try:
-        await bot.application.bot.delete_webhook()
-        logger.info("Webhook removed successfully")
+        bot = get_bot()
+        if bot.application:
+            await bot.application.bot.delete_webhook()
+            logger.info("Webhook removed successfully")
     except Exception as e:
         logger.error(f"Failed to remove webhook: {e}")
 
@@ -75,6 +81,10 @@ async def root():
 async def webhook(request: Request):
     """Telegram webhook endpoint"""
     try:
+        bot = get_bot()
+        if not bot.application:
+            raise HTTPException(status_code=500, detail="Bot not initialized")
+            
         # Get update data
         update_data = await request.json()
         update = Update.de_json(update_data, bot.application.bot)
@@ -91,9 +101,11 @@ async def webhook(request: Request):
 @app.get("/health")
 async def health_check():
     """Detailed health check"""
+    bot = get_bot()
     return {
         "status": "healthy",
         "bot_token_configured": bool(settings.telegram_bot_token),
+        "bot_initialized": bool(bot.application),
         "database_configured": bool(settings.database_url),
         "webhook_url": settings.webhook_url
     }
