@@ -7,7 +7,7 @@ services:
     startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
     envVars:
       - key: TELEGRAM_BOT_TOKEN
-        sync: false
+        value: 7565894498:AAE35txlRa2uTbZ7lBJWvrM9ExAtGYRtfuI
       - key: DATABASE_URL
         fromDatabase:
           name: 100gates-db
