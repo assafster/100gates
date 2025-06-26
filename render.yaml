@@ -1,12 +1,8 @@
 services:
   - type: web
     name: 100gates-bot
-    env: python
+    env: docker
     plan: free
-    buildCommand: |
-      python3.11 -m pip install --upgrade pip
-      python3.11 -m pip install -r requirements.txt
-    startCommand: python3.11 -m uvicorn app.main:app --host 0.0.0.0 --port $PORT
     envVars:
       - key: TELEGRAM_BOT_TOKEN
         value: 7565894498:AAE35txlRa2uTbZ7lBJWvrM9ExAtGYRtfuI
@@ -26,8 +22,6 @@ services:
         value: 69
       - key: ADMIN_TELEGRAM_IDS
         sync: false
-      - key: PYTHON_VERSION
-        value: 3.11.7
 
 databases:
   - name: gatesdb
